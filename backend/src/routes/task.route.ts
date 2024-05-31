@@ -63,4 +63,35 @@ taskRouter.post("/create-task", validateBody(TaskSchema), async (req, res) => {
   }
 });
 
+// DELETE /delete-task
+taskRouter.delete("/delete-task", async (req, res) => {
+  try {
+    const taskId = req.query.taskId as string;
+    const userId = req.query.userId as string;
+
+    const task = await prisma.task.findUnique({
+      where: {
+        id: taskId,
+        AND: {
+          userId,
+        }
+      },
+    });
+
+    if (!task) {
+      return res.status(400).send("Task not found")
+    } else {
+      await prisma.task.delete({
+        where: {
+          id: taskId,
+        },
+      });
+      res.status(200).send("Task deleted successfully");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+})
+
 export default taskRouter;

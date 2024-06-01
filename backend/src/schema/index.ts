@@ -12,3 +12,12 @@ export const TaskSchema = z.object({
     description: z.string().min(8).max(255),
     userId: z.string(),
 })
+
+// schema for the update Task model
+export const UpdateTaskSchema = z.object({
+    userId: z.string(),
+    taskId: z.string(),
+    title: z.string().max(255),
+    description: z.string().min(8).max(255),
+    status: z.enum(["completed", "in-progress", "todo"]),
+})

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import prisma from "../db";
 import { validateBody } from "../middleware/validation";
-import { TaskSchema } from "../schema";
+import { TaskSchema, UpdateTaskSchema } from "../schema";
 
 const taskRouter = Router();
 
@@ -62,6 +62,53 @@ taskRouter.post("/create-task", validateBody(TaskSchema), async (req, res) => {
     res.status(500).send("An error occurred");
   }
 });
+
+// PUT /update-task
+taskRouter.put("/update-task", validateBody(UpdateTaskSchema), async (req, res) => {
+  try {
+    const { title, description, userId, taskId, status } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    } else {
+      const task = await prisma.task.findUnique({
+        where: {
+          id: taskId,
+          AND: {
+            userId,
+          }
+        },
+      });
+
+      if (!task) {
+        return res.status(404).send("Task not found");
+      } else {
+        await prisma.task.update({
+          where: {
+            id: taskId,
+          },
+          data: {
+            title,
+            description,
+            status,
+          },
+        });
+      }
+    }
+
+    const tasks = await prisma.task.findMany();
+    res.status(200).send(tasks);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
+  }
+})
 
 // DELETE /delete-task
 taskRouter.delete("/delete-task", async (req, res) => {
